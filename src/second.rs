@@ -1,11 +1,11 @@
 use std::mem;
 
-pub struct List {
-    head: Link,
+pub struct List<T> {
+    head: Link<T>,
 }
 
 //Type alias
-type Link = Option<Box<Node>>;
+type Link<T> = Option<Box<Node<T>>>;
 
 // enum Link {
 //     Empty,
@@ -13,42 +13,46 @@ type Link = Option<Box<Node>>;
 // }
 
 //a node struc that contains an element and the next Link enum
-struct Node {
-    element: i32,
-    next: Link,
+struct Node<T> {
+    element: T,
+    next: Link<T>,
 }
 
-
 //Self is an alias for "that type, in this case 'List' "
-impl List {
-
+impl<T> List<T> {
     //Providing a static method which is just a normal function inside an impl
     pub fn new() -> Self {
         //We refer to variants of enum using '::' which is the namespacing operator
         List { head: None }
     }
 
-        
-    pub fn push(&mut self, element: i32) {
-        let new_node = Box::new(
-            Node {
-                element: element,
-                next: self.head.take(),
-            }
-        );
+    pub fn push(&mut self, element: T) {
+        let new_node = Box::new(Node {
+            element: element,
+            next: self.head.take(),
+        });
 
         self.head = Some(new_node);
     }
 
-    pub fn pop(&mut self) -> Option<i32> {
+    pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|node| {
             self.head = node.next;
             node.element
         })
     }
+
+    pub fn peek(&self) -> Option<&T> {
+        self.head.as_ref().map(|node| &node.element)
+    }
+
+    // Todo: Creat a test for this
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        self.head.as_mut().map(|node| &mut node.element)
+    }
 }
 
-impl Drop for List {
+impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut cur_link = mem::replace(&mut self.head, None);
 
@@ -56,8 +60,7 @@ impl Drop for List {
             cur_link = boxed_node.next.take();
         }
     }
-    
-}   
+}
 
 #[cfg(test)]
 mod test {
